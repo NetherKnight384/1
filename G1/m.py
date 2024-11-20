@@ -4,8 +4,8 @@ from OpenGL.GL import *
 from OpenGL.GLUT import *
 
 WIN_W, WIN_H = 800, 800
-GRAW = 10
-
+GRAW = 0.001
+SIM_SPEED = 2
 square_pos = [0,0]
 square_siz = 0.01
 
@@ -13,13 +13,13 @@ class square:
     def __init__(self, pos):
         self.pos = [pos[0], pos[1]]
         self.acc = [0, 0]
-        print(self.pos)
+        
     def draw(self):
         draw_square(self.pos, 0.01)
     def tick(self, GRAW):
         self.pos[0] += self.acc[0]
         self.pos[1] += self.acc[1]
-        self.acc[0] += GRAW
+        self.acc[1] -= GRAW
 
 def draw_square(pos,size):
     glBegin(GL_QUADS)
@@ -28,6 +28,21 @@ def draw_square(pos,size):
     glVertex2f(pos[0] + size, pos[1] + size)
     glVertex2f(pos[0] - size, pos[1] + size)
     glEnd()
+
+def draw_all(particles):
+    glClear(GL_COLOR_BUFFER_BIT)
+    draw_square(square_pos, square_siz)
+    for i in range(len(particles)):
+        cache = particles[i]
+        cache.draw()
+    pygame.display.flip()
+
+
+def sim_all(particles,GRAW):
+    for i in range(len(particles)):
+        cache = particles[i]
+        cache.tick(GRAW)
+
 
 def main():
     pygame.init()
@@ -40,7 +55,7 @@ def main():
     glMatrixMode(GL_MODELVIEW)
 
     particles = []
-
+    sim_speedt = 0
     run = True
     clock = pygame.time.Clock()
     while run:
@@ -48,9 +63,7 @@ def main():
             if event.type == QUIT:
                 run = False
         
-        for i in range(len(particles)):
-            cache = particles[i]
-            cache.tick(GRAW)
+
 
         key = pygame.key.get_pressed()
         if key[K_LEFT]:
@@ -64,13 +77,17 @@ def main():
         if key[K_SPACE]:
             particles.append(square(square_pos))
         
-        glClear(GL_COLOR_BUFFER_BIT)
-        draw_square(square_pos, square_siz)
-        for i in range(len(particles)):
-            cache = particles[i]
-            cache.draw()
-        pygame.display.flip()
+        
+        if sim_speedt < SIM_SPEED:
+            sim_speedt += 1
+            draw_all(particles)
+            
+        elif sim_speedt == SIM_SPEED:
+            sim_speedt = 0
+            draw_all(particles)
+            sim_all(particles, GRAW)
         clock.tick(60)
+        
     pygame.quit()
 
 if __name__ == "__main__":
