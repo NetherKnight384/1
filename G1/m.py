@@ -2,22 +2,26 @@ import pygame
 from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLUT import *
+import math
 
 WIN_W, WIN_H = 1000, 1000
-GRAW = [0, -0.001]
-SIM_SPEED = 2
+#-0.001
+GRAW = [0, 0]
+SIM_SPEED = 8
 square_pos = [0,0]
 square_siz = 0.01
 
-class square:
-    def __init__(self, pos, siz):
+class particle:
+    def __init__(self, pos, siz, acc):
         self.pos = [pos[0], pos[1]]
-        self.acc = [0, 0]
+        self.acc = [acc[0], acc[1]]
         self.siz = siz
+        print("st")
         
     def draw(self):
         draw_square(self.pos, 0.01)
-    def tick(self, GRAW):
+    def tick(self, GRAW, particles):
+        
         if (self.pos[1] <= -1 + self.siz):
             self.pos[1] = -1 + self.siz
             if self.acc[1] < 0:
@@ -41,6 +45,24 @@ class square:
         else:
             self.pos[0] += self.acc[0]
             self.acc[0] += GRAW[0]
+        
+
+        for i in range(len(particles)):
+            cache_p = particles[i]
+            if self.pos != cache_p.pos:
+                cache_d = [math.fabs(self.pos[0]) - math.fabs(cache_p.pos[0]), math.fabs(self.pos[1]) - math.fabs(cache_p.pos[1])]
+                if self.pos[0] < cache_p.pos[0]:
+                    self.acc[0] += math.fabs(cache_d[0] / 40)
+                elif self.pos[0] > cache_p.pos[0]:
+                    self.acc[0] -= math.fabs(cache_d[0] / 40)
+                if self.pos[1] < cache_p.pos[1]:
+                    self.acc[1] += math.fabs(cache_d[1] / 40)
+                elif self.pos[1] > cache_p.pos[1]:
+                    self.acc[1] -= math.fabs(cache_d[1] / 40)
+                
+
+
+
 
         
 
@@ -64,7 +86,7 @@ def draw_all(particles):
 def sim_all(particles,GRAW):
     for i in range(len(particles)):
         cache = particles[i]
-        cache.tick(GRAW)
+        cache.tick(GRAW, particles)
 
 
 def main():
@@ -79,14 +101,16 @@ def main():
 
     particles = []
     sim_speedt = 0
+    last_spawn = pygame.time.get_ticks()
     run = True
     clock = pygame.time.Clock()
+
+
+
     while run:
         for event in pygame.event.get():
             if event.type == QUIT:
                 run = False
-        
-
 
         key = pygame.key.get_pressed()
         if key[K_LEFT]:
@@ -98,7 +122,11 @@ def main():
         if key[K_DOWN]:
             square_pos[1] -= 0.01
         if key[K_SPACE]:
-            particles.append(square(square_pos, square_siz))
+            if last_spawn - pygame.time.get_ticks() < -300:
+                particles.append(particle(square_pos, square_siz, [0,0]))
+                last_spawn = pygame.time.get_ticks()
+                print(last_spawn)
+
         
         
         if sim_speedt < SIM_SPEED:
