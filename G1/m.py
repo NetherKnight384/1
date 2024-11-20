@@ -2,12 +2,12 @@ import pygame
 from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLUT import *
-import math
+import math, numpy
 
 WIN_W, WIN_H = 1000, 1000
 #-0.001
 GRAW = [0, 0]
-SIM_SPEED = 8
+SIM_SPEED = 0
 square_pos = [0,0]
 square_siz = 0.01
 
@@ -21,6 +21,15 @@ class particle:
     def draw(self):
         draw_square(self.pos, 0.01)
     def tick(self, GRAW, particles):
+        for i in range(len(particles)):
+            cache_p = particles[i]
+            if self.pos != cache_p.pos:
+                cache_d = [math.fabs(cache_p.pos[0]) - math.fabs(self.pos[0]), math.fabs(cache_p.pos[1]) - math.fabs(self.pos[1])]
+                dist = math.sqrt(cache_d[0]**2+cache_d[1]**2)
+                norm = numpy.linalg.norm(cache_d)
+                cache_d_n = cache_d / norm
+                new_pos = self.pos + cache_d_n * min(dist, norm)
+                print(new_pos)
         
         if (self.pos[1] <= -1 + self.siz):
             self.pos[1] = -1 + self.siz
@@ -30,9 +39,6 @@ class particle:
             self.pos[1] = 1 - self.siz
             if self.acc[1] > 0:
                 self.acc[1] = 0
-        else:
-            self.pos[1] += self.acc[1]
-            self.acc[1] += GRAW[1]
         #----------
         if (self.pos[0] <= -1 + self.siz):
             self.pos[0] = -1 + self.siz
@@ -42,29 +48,10 @@ class particle:
             self.pos[0] = 1 - self.siz
             if self.acc[0] > 0:
                 self.acc[0] = 0
-        else:
-            self.pos[0] += self.acc[0]
             self.acc[0] += GRAW[0]
-        
-
-        for i in range(len(particles)):
-            cache_p = particles[i]
-            if self.pos != cache_p.pos:
-                cache_d = [math.fabs(self.pos[0]) - math.fabs(cache_p.pos[0]), math.fabs(self.pos[1]) - math.fabs(cache_p.pos[1])]
-                if self.pos[0] < cache_p.pos[0]:
-                    self.acc[0] += math.fabs(cache_d[0] / 40)
-                elif self.pos[0] > cache_p.pos[0]:
-                    self.acc[0] -= math.fabs(cache_d[0] / 40)
-                if self.pos[1] < cache_p.pos[1]:
-                    self.acc[1] += math.fabs(cache_d[1] / 40)
-                elif self.pos[1] > cache_p.pos[1]:
-                    self.acc[1] -= math.fabs(cache_d[1] / 40)
-                
-
-
-
-
-        
+    def move_tick(self):
+        self.pos[0] += self.acc[0]
+        self.pos[1] += self.acc[1]
 
 def draw_square(pos,size):
     glBegin(GL_QUADS)
@@ -87,6 +74,9 @@ def sim_all(particles,GRAW):
     for i in range(len(particles)):
         cache = particles[i]
         cache.tick(GRAW, particles)
+    for i in range(len(particles)):
+        cache = particles[i]
+        cache.move_tick()
 
 
 def main():
