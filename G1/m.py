@@ -3,23 +3,46 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 
-WIN_W, WIN_H = 800, 800
-GRAW = 0.001
+WIN_W, WIN_H = 1000, 1000
+GRAW = [0, -0.001]
 SIM_SPEED = 2
 square_pos = [0,0]
 square_siz = 0.01
 
 class square:
-    def __init__(self, pos):
+    def __init__(self, pos, siz):
         self.pos = [pos[0], pos[1]]
         self.acc = [0, 0]
+        self.siz = siz
         
     def draw(self):
         draw_square(self.pos, 0.01)
     def tick(self, GRAW):
-        self.pos[0] += self.acc[0]
-        self.pos[1] += self.acc[1]
-        self.acc[1] -= GRAW
+        if (self.pos[1] <= -1 + self.siz):
+            self.pos[1] = -1 + self.siz
+            if self.acc[1] < 0:
+                self.acc[1] = 0
+        elif (self.pos[1] >= 1 - self.siz):
+            self.pos[1] = 1 - self.siz
+            if self.acc[1] > 0:
+                self.acc[1] = 0
+        else:
+            self.pos[1] += self.acc[1]
+            self.acc[1] += GRAW[1]
+        #----------
+        if (self.pos[0] <= -1 + self.siz):
+            self.pos[0] = -1 + self.siz
+            if self.acc[0] < 0:
+                self.acc[0] = 0
+        elif (self.pos[0] >= 1 - self.siz):
+            self.pos[0] = 1 - self.siz
+            if self.acc[0] > 0:
+                self.acc[0] = 0
+        else:
+            self.pos[0] += self.acc[0]
+            self.acc[0] += GRAW[0]
+
+        
 
 def draw_square(pos,size):
     glBegin(GL_QUADS)
@@ -75,7 +98,7 @@ def main():
         if key[K_DOWN]:
             square_pos[1] -= 0.01
         if key[K_SPACE]:
-            particles.append(square(square_pos))
+            particles.append(square(square_pos, square_siz))
         
         
         if sim_speedt < SIM_SPEED:
