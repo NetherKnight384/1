@@ -2,7 +2,7 @@ import pygame
 from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLUT import *
-import math, numpy
+import math, numpy, random
 
 WIN_W, WIN_H = 1000, 1000
 #-0.001
@@ -13,9 +13,9 @@ square_siz = 0.01
 
 
 class particle:
-    def __init__(self, pos, siz, acc, mass, color, static, lifetime, name):
+    def __init__(self, pos, siz, speed, mass, color, static, lifetime, name):
         self.pos = [pos[0], pos[1]]
-        self.acc = [acc[0], acc[1]]
+        self.speed = [speed[0], speed[1]]
         self.siz = siz
         self.color = color
         self.mass = mass
@@ -38,18 +38,18 @@ class particle:
                         norm = [cache_d[0] / dist, cache_d[1] / dist]
                     else:
                         norm = [0,0]
-                    self.acc[0] += norm[0] / (80 * mass)
-                    self.acc[1] += norm[1] / (80 * mass)
+                    self.speed[0] += norm[0] / (80 * (dist/100) * mass)
+                    self.speed[1] += norm[1] / (80 * (dist/100) * mass)
     def tick(self, GRAW, particles):
         if  self.static == False:
-            self.acc[0] += GRAW[0]
-            self.acc[1] += GRAW[1]
+            self.speed[0] += GRAW[0]
+            self.speed[1] += GRAW[1]
         
         
     def move_tick(self):
         if  self.static == False:
-            self.pos[0] += self.acc[0]
-            self.pos[1] += self.acc[1]
+            self.pos[0] += self.speed[0]
+            self.pos[1] += self.speed[1]
     
     def colision(self, particles):
         if  self.static == False:
@@ -57,9 +57,13 @@ class particle:
                 cache_p = particles[i]
                 cache_d = [cache_p.pos[0] - self.pos[0], cache_p.pos[1] - self.pos[1]]
                 dist = math.sqrt(cache_d[0]**2+cache_d[1]**2)
-                if self.name != cache_p.name and dist <= 5 and cache_p.static != True:
+                norm = [cache_d[0] - dist, cache_d[1] - dist]
+                if self.name != cache_p.name and dist <= 10 and cache_p.static != True:
                     particles.append(particle(self.pos, self.siz, [0,0], 15, [1,0,0], True, 500, len(particles)))
-    
+                    self.speed[0] -= self.speed[0] * 0.1 * norm[0]
+                    self.speed[1] -= self.speed[1] * 0.1 * norm[1]
+                    cache_p.speed[0] -= cache_p.speed[0] * 0.1 * -norm[0]
+                    cache_p.speed[1] -= cache_p.speed[1] * 0.1 * -norm[1]
             
 
 
@@ -157,7 +161,7 @@ def main():
                 last_spawn = pygame.time.get_ticks()
         if key[K_b]:
             if last_spawn - pygame.time.get_ticks() < -300:
-                particles.append(particle(square_pos, square_siz, [0,0], 15, [0,1,1], False, "inf", len(particles)))
+                particles.append(particle(square_pos, square_siz, [0,0], 1, [random.random(),random.random(),random.random()], False, "inf", len(particles)))
                 last_spawn = pygame.time.get_ticks()
         if key[K_c]:
             if last_spawn - pygame.time.get_ticks() < -300:
