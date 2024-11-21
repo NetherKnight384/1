@@ -12,11 +12,12 @@ square_pos = [0,0]
 square_siz = 0.01
 
 class particle:
-    def __init__(self, pos, siz, acc):
+    def __init__(self, pos, siz, acc, mass):
         self.pos = [pos[0], pos[1]]
         self.acc = [acc[0], acc[1]]
         self.siz = siz
-        print("st")
+        self.mass = mass
+
         
     def draw(self):
         draw_square(self.pos, 0.01)
@@ -24,12 +25,15 @@ class particle:
         for i in range(len(particles)):
             cache_p = particles[i]
             if self.pos != cache_p.pos:
-                cache_d = [math.fabs(cache_p.pos[0]) - math.fabs(self.pos[0]), math.fabs(cache_p.pos[1]) - math.fabs(self.pos[1])]
+                cache_d = [cache_p.pos[0] - self.pos[0], cache_p.pos[1] - self.pos[1]]
                 dist = math.sqrt(cache_d[0]**2+cache_d[1]**2)
-                norm = numpy.linalg.norm(cache_d)
-                cache_d_n = cache_d / norm
-                new_pos = self.pos + cache_d_n * min(dist, norm)
-                print(new_pos)
+                if dist != 0:
+                    norm = [cache_d[0] / dist, cache_d[1] / dist]
+                else:
+                    norm = [0,0]
+                self.acc[0] += norm[0] / (80 * self.mass)
+                self.acc[1] += norm[1] / (80 * self.mass)
+                
         
         if (self.pos[1] <= -1 + self.siz):
             self.pos[1] = -1 + self.siz
@@ -49,9 +53,13 @@ class particle:
             if self.acc[0] > 0:
                 self.acc[0] = 0
             self.acc[0] += GRAW[0]
+
     def move_tick(self):
         self.pos[0] += self.acc[0]
         self.pos[1] += self.acc[1]
+    
+    
+
 
 def draw_square(pos,size):
     glBegin(GL_QUADS)
@@ -113,9 +121,9 @@ def main():
             square_pos[1] -= 0.01
         if key[K_SPACE]:
             if last_spawn - pygame.time.get_ticks() < -300:
-                particles.append(particle(square_pos, square_siz, [0,0]))
+                particles.append(particle(square_pos, square_siz, [0,0], 4))
                 last_spawn = pygame.time.get_ticks()
-                print(last_spawn)
+
 
         
         
