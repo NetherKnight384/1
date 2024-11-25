@@ -60,7 +60,7 @@ class particle:
                 dist = math.sqrt(cache_d[0]**2+cache_d[1]**2)
                 
                 if dist < 10*(self.siz + cache_p.siz) and self.name != cache_p.name and cache_p.static != True:
-                    particles.append(particle(self.pos, self.siz, [0,0], 15, [1,0,0], True, 1000, len(particles)))
+                    #particles.append(particle(self.pos, self.siz, [0,0], 15, [1,0,0], True, 1000, len(particles)))
                     """
                     norm = [cache_d[0] - dist, cache_d[1] - dist]
                     if self.speed[0] * norm[0] <= 0:
@@ -70,22 +70,27 @@ class particle:
                     """
 
 class UI:
-    def __init__(self, x, y, width, height, color = [1,1,1]):
-        self.x = x
-        self.y = y
-        self.height = height
-        self.width = width
-        self.color = [color[0], color[1], color[2]]
+    def __init__(self, pos, siz, color=[[1,1,1],[1,1,1]], action_=[False,False]):
+        self.pos = [pos[0], pos[1]]
+        self.siz = [siz[0], siz[1]]
+        self.color = [[color[0][0], color[0][1], color[0][2]],[color[1][0], color[1][1], color[1][2]]]
+        self.action_ = [action_[0], action_[1]]
     def draw_box(self):
-        glColor3f(self.color[0], self.color[1], self.color[2])
+        glColor3f(self.color[0][0], self.color[0][1], self.color[0][2])
         glBegin(GL_QUADS)
 
-        glVertex2f(self.x / WIN_W * 2 - 1, 1 - self.y / WIN_H * 2)
-        glVertex2f((self.x + self.width) / WIN_W * 2 -1, 1 - self.y / WIN_H * 2)
-        glVertex2f((self.x + self.width) / WIN_W * 2 -1, 1 - (self.y + self.height) / WIN_H * 2)
-        glVertex2f(self.x / WIN_W * 2 - 1, 1 - (self.y + self.height) / WIN_H * 2)
+        glVertex2f(self.pos[0] / WIN_W * 2 - 1, 1 - self.pos[1] / WIN_H * 2)
+        glVertex2f((self.pos[0] + self.siz[0]) / WIN_W * 2 -1, 1 - self.pos[1] / WIN_H * 2)
+        glVertex2f((self.pos[0] + self.siz[0]) / WIN_W * 2 -1, 1 - (self.pos[1] + self.siz[1]) / WIN_H * 2)
+        glVertex2f(self.pos[0] / WIN_W * 2 - 1, 1 - (self.pos[1] + self.siz[1]) / WIN_H * 2)
 
         glEnd()
+    def action(self, mouse):
+        if self.action_[0] != False:
+            if self.action_[0] == "on_self":
+                pass
+
+        
 
 
 def draw_square(pos,size,size_w,color,foll,target_pos, size_h):
@@ -103,7 +108,7 @@ def draw_square(pos,size,size_w,color,foll,target_pos, size_h):
         glVertex2f((pos[0]-target_pos[0])/(WIN_W*size_w) - size*0.01*size_h, (pos[1]-target_pos[1])/(WIN_H*size_w) + size*0.01*size_h)
     glEnd()
 
-def draw_all(particles,size_w, foll, size_h, ui):
+def draw_all(particles,size_w, foll, size_h, ui, mouse):
     glClear(GL_COLOR_BUFFER_BIT)
     draw_square(square_pos, square_siz,size_w, [0,1,0], foll, square_pos,size_h)
     for i in range(len(particles)):
@@ -159,12 +164,13 @@ def main():
     run = True
     clock = pygame.time.Clock()
     ui = []
-    ui.append(UI(0,0,500,200))
+    ui.append(UI([0,0], [500,200]))
 
     while run:
         for event in pygame.event.get():
             if event.type == QUIT:
                 run = False
+        mouse = pygame.mouse.get_pressed()
         key = pygame.key.get_pressed()
         if key[K_EQUALS]:
             size_w /= 1.1
@@ -204,11 +210,11 @@ def main():
         
         if sim_speedt < SIM_SPEED:
             sim_speedt += 1
-            draw_all(particles,size_w, foll,size_h, ui)
+            draw_all(particles,size_w, foll,size_h, ui, mouse)
             
         elif sim_speedt == SIM_SPEED:
             sim_speedt = 0
-            draw_all(particles,size_w,foll,size_h, ui)
+            draw_all(particles,size_w,foll,size_h, ui, mouse)
             sim_all(particles, GRAW)
         clock.tick(60)
         
